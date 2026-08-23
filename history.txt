@@ -2,3 +2,5 @@ pwd
 ls
 date
 git status
+pwd
+git status
