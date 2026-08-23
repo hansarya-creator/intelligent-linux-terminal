@@ -11,3 +11,5 @@ mkdir test_review
 ls
 rmdir test_review
 ls
+git show
+git st
