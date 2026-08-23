@@ -14,3 +14,9 @@ ls
 git show
 git st
 git stage
+cd ..
+pwd
+cd
+pwd
+pwd
+cd
