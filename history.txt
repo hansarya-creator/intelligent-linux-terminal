@@ -13,3 +13,4 @@ rmdir test_review
 ls
 git show
 git st
+git stage
