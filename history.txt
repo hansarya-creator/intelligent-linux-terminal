@@ -1,0 +1,4 @@
+pwd
+ls
+date
+git status
