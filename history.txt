@@ -4,3 +4,10 @@ date
 git status
 pwd
 git status
+ls
+cd ..
+pwd
+mkdir test_review
+ls
+rmdir test_review
+ls
