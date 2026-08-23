@@ -114,12 +114,20 @@ int main() {
             continue;
         }
 
-        /* Handle cd */
-        if (strncmp(command, "cd ", 3) == 0) {
+                        /* Handle cd */
+        if (strcmp(command, "cd") == 0 || strncmp(command, "cd ", 3) == 0) {
             save_history(command);
 
-            if (chdir(command + 3) != 0) {
-                perror("cd failed");
+            if (strcmp(command, "cd") == 0) {
+                const char *home = getenv("HOME");
+
+                if (home == NULL || chdir(home) != 0) {
+                    perror("cd failed");
+                }
+            } else {
+                if (chdir(command + 3) != 0) {
+                    perror("cd failed");
+                }
             }
 
             continue;
