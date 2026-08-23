@@ -114,7 +114,7 @@ int main() {
             continue;
         }
 
-                        /* Handle cd */
+                                /* Handle cd */
         if (strcmp(command, "cd") == 0 || strncmp(command, "cd ", 3) == 0) {
             save_history(command);
 
@@ -125,8 +125,25 @@ int main() {
                     perror("cd failed");
                 }
             } else {
-                if (chdir(command + 3) != 0) {
-                    perror("cd failed");
+                const char *path = command + 3;
+                const char *home = getenv("HOME");
+                char expanded_path[MAX_COMMAND];
+
+                if (strcmp(path, "~") == 0) {
+                    if (home == NULL || chdir(home) != 0) {
+                        perror("cd failed");
+                    }
+                } else if (strncmp(path, "~/", 2) == 0 && home != NULL) {
+                    snprintf(expanded_path, sizeof(expanded_path), "%s/%s",
+                             home, path + 2);
+
+                    if (chdir(expanded_path) != 0) {
+                        perror("cd failed");
+                    }
+                } else {
+                    if (chdir(path) != 0) {
+                        perror("cd failed");
+                    }
                 }
             }
 
