@@ -1,2 +1,5 @@
 terminal
 main_backup.c
+
+backend/venv/
+backend/__pycache__/

@@ -4,86 +4,108 @@
 #include <unistd.h>
 #include <sys/wait.h>
 
-#define MAX_COMMAND 1024
-#define HISTORY_FILE "history.txt"
+#define MAX 1024
+#define HISTORY "history.txt"
 
-void save_history(const char *command) {
-    FILE *file = fopen(HISTORY_FILE, "a");
-
-    if (file == NULL) {
-        perror("Unable to open history file");
-        return;
+void save_history(const char *cmd) {
+    FILE *f = fopen(HISTORY, "a");
+    if (f) {
+        fprintf(f, "%s\n", cmd);
+        fclose(f);
     }
-
-    fprintf(file, "%s\n", command);
-    fclose(file);
 }
 
 void show_history() {
-    FILE *file = fopen(HISTORY_FILE, "r");
-    char line[MAX_COMMAND];
-    int count = 1;
+    FILE *f = fopen(HISTORY, "r");
+    char line[MAX];
+    int n = 1;
 
-    if (file == NULL) {
+    if (!f) {
         printf("No command history available.\n");
         return;
     }
 
-    while (fgets(line, sizeof(line), file) != NULL) {
-        printf("%d. %s", count, line);
-        count++;
-    }
+    while (fgets(line, MAX, f))
+        printf("%d. %s", n++, line);
 
-    fclose(file);
+    fclose(f);
 }
 
-/* Find a command from history that starts with user input */
-int find_suggestion(const char *input, char *suggestion) {
-    FILE *file = fopen(HISTORY_FILE, "r");
-    char line[MAX_COMMAND];
-    size_t input_len = strlen(input);
+int suggestion(const char *input, char *result) {
+    FILE *f = fopen(HISTORY, "r");
+    char line[MAX];
+    size_t len = strlen(input);
 
-    if (file == NULL) {
-        return 0;
-    }
+    if (!f) return 0;
 
-    while (fgets(line, sizeof(line), file) != NULL) {
+    while (fgets(line, MAX, f)) {
         line[strcspn(line, "\n")] = '\0';
 
-        if (strncmp(line, input, input_len) == 0 &&
-            strcmp(line, input) != 0) {
-
-            strcpy(suggestion, line);
-            fclose(file);
+        if (!strncmp(line, input, len) && strcmp(line, input)) {
+            strcpy(result, line);
+            fclose(f);
             return 1;
         }
     }
 
-    fclose(file);
+    fclose(f);
     return 0;
 }
 
-void execute_command(char *command) {
+void run_command(char *cmd) {
     pid_t pid = fork();
 
-    if (pid < 0) {
-        perror("fork failed");
-    }
-    else if (pid == 0) {
-        execlp("sh", "sh", "-c", command, NULL);
-
-        perror("Command execution failed");
+    if (pid == 0) {
+        execlp("sh", "sh", "-c", cmd, NULL);
+        perror("exec failed");
         exit(1);
     }
-    else {
+
+    if (pid > 0)
         wait(NULL);
+    else
+        perror("fork failed");
+}
+
+void handle_cd(char *cmd) {
+    char *home = getenv("HOME");
+    char path[MAX];
+
+    if (!home) return;
+
+    if (!strcmp(cmd, "cd") || !strcmp(cmd, "cd ~")) {
+        chdir(home);
+    }
+    else if (!strncmp(cmd, "cd ~/", 5)) {
+        snprintf(path, MAX, "%s/%s", home, cmd + 5);
+        if (chdir(path)) perror("cd");
+    }
+    else {
+        if (chdir(cmd + 3)) perror("cd");
     }
 }
 
-int main() {
-    char command[MAX_COMMAND];
-    char suggestion[MAX_COMMAND];
-    char choice[10];
+int backend_mode(char *cmd) {
+    if (!cmd || !strlen(cmd)) return 1;
+
+    if (!strcmp(cmd, "history")) {
+        show_history();
+        return 0;
+    }
+
+    save_history(cmd);
+
+    if (!strcmp(cmd, "cd") || !strncmp(cmd, "cd ", 3)) {
+        handle_cd(cmd);
+        return 0;
+    }
+
+    run_command(cmd);
+    return 0;
+}
+
+int interactive_mode() {
+    char cmd[MAX], sug[MAX], choice[10];
 
     printf("====================================\n");
     printf("   Intelligent Linux Terminal\n");
@@ -91,88 +113,50 @@ int main() {
 
     while (1) {
         printf("SmartTerminal> ");
+        fflush(stdout);
 
-        if (fgets(command, sizeof(command), stdin) == NULL) {
-            break;
-        }
+        if (!fgets(cmd, MAX, stdin)) break;
+        cmd[strcspn(cmd, "\n")] = '\0';
 
-        command[strcspn(command, "\n")] = '\0';
+        if (!strlen(cmd)) continue;
 
-        if (strlen(command) == 0) {
-            continue;
-        }
-
-        /* Exit */
-        if (strcmp(command, "exit") == 0) {
+        if (!strcmp(cmd, "exit")) {
             printf("Goodbye!\n");
             break;
         }
 
-        /* History */
-        if (strcmp(command, "history") == 0) {
+        if (!strcmp(cmd, "history")) {
             show_history();
             continue;
         }
 
-                                /* Handle cd */
-        if (strcmp(command, "cd") == 0 || strncmp(command, "cd ", 3) == 0) {
-            save_history(command);
-
-            if (strcmp(command, "cd") == 0) {
-                const char *home = getenv("HOME");
-
-                if (home == NULL || chdir(home) != 0) {
-                    perror("cd failed");
-                }
-            } else {
-                const char *path = command + 3;
-                const char *home = getenv("HOME");
-                char expanded_path[MAX_COMMAND];
-
-                if (strcmp(path, "~") == 0) {
-                    if (home == NULL || chdir(home) != 0) {
-                        perror("cd failed");
-                    }
-                } else if (strncmp(path, "~/", 2) == 0 && home != NULL) {
-                    snprintf(expanded_path, sizeof(expanded_path), "%s/%s",
-                             home, path + 2);
-
-                    if (chdir(expanded_path) != 0) {
-                        perror("cd failed");
-                    }
-                } else {
-                    if (chdir(path) != 0) {
-                        perror("cd failed");
-                    }
-                }
-            }
-
+        if (!strcmp(cmd, "cd") || !strncmp(cmd, "cd ", 3)) {
+            save_history(cmd);
+            handle_cd(cmd);
             continue;
         }
 
-        /* Search history for a suggestion */
-        if (find_suggestion(command, suggestion)) {
-            printf("Suggestion: %s\n", suggestion);
+        if (suggestion(cmd, sug)) {
+            printf("Suggestion: %s\n", sug);
             printf("Use this command? (y/n): ");
 
-            if (fgets(choice, sizeof(choice), stdin) != NULL) {
-                choice[strcspn(choice, "\n")] = '\0';
-
-                if (strcmp(choice, "y") == 0 ||
-                    strcmp(choice, "Y") == 0) {
-
-                    strcpy(command, suggestion);
-                    printf("Executing: %s\n", command);
-                }
+            if (fgets(choice, 10, stdin)) {
+                if (choice[0] == 'y' || choice[0] == 'Y')
+                    strcpy(cmd, sug);
             }
         }
 
-        /* Save the final command */
-        save_history(command);
-
-        /* Execute command */
-        execute_command(command);
+        save_history(cmd);
+        run_command(cmd);
     }
 
     return 0;
 }
+
+int main(int argc, char *argv[]) {
+    if (argc >= 3 && !strcmp(argv[1], "--backend"))
+        return backend_mode(argv[2]);
+
+    return interactive_mode();
+}
+

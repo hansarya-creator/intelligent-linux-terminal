@@ -26,3 +26,40 @@ cd ~
 pwd
 cd ~
 pwd
+pwd
+pwd
+ls
+git st
+git status
+pwd
+pwd
+ls
+date
+pwd
+pwd
+pwd
+pwd
+ls
+date
+cd ..
+pwd
+pwd
+pwd
+ls
+date
+git st
+git st
+pythn --version
+git i
+git s
+l
+pw
+pw
+git st
+pw
+git st
+g
+pw
+p
+gcc
+git branch

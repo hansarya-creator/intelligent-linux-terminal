@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intelligent Linux Terminal</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="terminal-container">
+
+        <div class="terminal-header">
+            <div class="terminal-title">
+                🐧 Intelligent Linux Terminal
+            </div>
+
+            <div class="status">
+                <span class="status-dot"></span>
+                Backend Connected
+            </div>
+        </div>
+
+        <div class="terminal-body" id="terminalOutput">
+            <div class="welcome">
+                <h2>Intelligent Linux Terminal</h2>
+                <p>Web-based Linux command terminal</p>
+                <p>Type a command below to begin.</p>
+            </div>
+        </div>
+
+        <div class="command-area">
+
+            <div class="prompt" id="prompt">
+                hansarya@SmartTerminal:~$
+            </div>
+
+            <input
+                type="text"
+                id="commandInput"
+                placeholder="Enter Linux command..."
+                autocomplete="off"
+            >
+
+            <button onclick="executeCommand()">
+                Execute
+            </button>
+
+        </div>
+
+        <div class="quick-commands">
+            <button onclick="quickCommand('pwd')">pwd</button>
+            <button onclick="quickCommand('ls')">ls</button>
+            <button onclick="quickCommand('date')">date</button>
+            <button onclick="quickCommand('history')">history</button>
+            <button onclick="quickCommand('clear')">clear</button>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
