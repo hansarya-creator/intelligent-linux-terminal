@@ -5,10 +5,19 @@ import subprocess
 import os
 
 
-app = FastAPI(title="Intelligent Linux Terminal API")
+# =========================================================
+# FASTAPI APPLICATION
+# =========================================================
+
+app = FastAPI(
+    title="Intelligent Linux Terminal API"
+)
 
 
-# Allow the frontend to communicate with the backend
+# =========================================================
+# CORS
+# =========================================================
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -21,26 +30,44 @@ app.add_middleware(
 )
 
 
+# =========================================================
+# REQUEST MODEL
+# =========================================================
+
 class CommandRequest(BaseModel):
     command: str
 
 
-PROJECT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# =========================================================
+# PROJECT PATH
+# =========================================================
 
-# Absolute path of the C terminal executable
-TERMINAL_PATH = os.path.join(PROJECT_DIR, "terminal")
+PROJECT_DIR = os.path.dirname(
+    os.path.dirname(
+        os.path.abspath(__file__)
+    )
+)
 
-# Current directory of the web terminal
+TERMINAL_PATH = os.path.join(
+    PROJECT_DIR,
+    "terminal"
+)
+
+
+# Current directory used by the web terminal
 current_dir = PROJECT_DIR
 
 
-def get_suggestion(command):
-    """
-    Find a previous command from history that starts
-    with the same text as the current command.
-    """
+# =========================================================
+# FIND COMMAND SUGGESTION
+# =========================================================
 
-    history_file = os.path.join(PROJECT_DIR, "history.txt")
+def get_suggestion(command):
+
+    history_file = os.path.join(
+        PROJECT_DIR,
+        "history.txt"
+    )
 
     if not os.path.exists(history_file):
         return None
@@ -51,8 +78,14 @@ def get_suggestion(command):
         return None
 
     try:
-        with open(history_file, "r") as file:
+
+        with open(
+            history_file,
+            "r"
+        ) as file:
+
             for line in file:
+
                 previous_command = line.strip()
 
                 if (
@@ -60,44 +93,53 @@ def get_suggestion(command):
                     and previous_command != command
                     and previous_command.startswith(command)
                 ):
+
                     return previous_command
 
     except Exception:
+
         return None
 
     return None
 
 
+# =========================================================
+# HOME / TEST API
+# =========================================================
+
 @app.get("/")
 def home():
+
     return {
-        "message": "Intelligent Linux Terminal Backend is running!"
+        "message":
+        "Intelligent Linux Terminal Backend is running!"
     }
 
 
+# =========================================================
+# EXECUTE COMMAND
+# =========================================================
+
 @app.post("/execute")
-def execute_command(request: CommandRequest):
+def execute_command(
+    request: CommandRequest
+):
+
     global current_dir
 
     try:
+
         command = request.command.strip()
 
-        if not command:
-            return {
-                "command": command,
-                "output": "",
-                "error": "Command cannot be empty.",
-                "suggestion": None,
-                "return_code": 1,
-                "current_directory": current_dir
-            }
 
         # -------------------------------------------------
-        # HANDLE CLEAR
+        # EMPTY COMMAND
         # -------------------------------------------------
-        if command == "clear":
+
+        if not command:
+
             return {
-                "command": command,
+                "command": "",
                 "output": "",
                 "error": "",
                 "suggestion": None,
@@ -105,78 +147,197 @@ def execute_command(request: CommandRequest):
                 "current_directory": current_dir
             }
 
+
         # -------------------------------------------------
-        # HANDLE CD
+        # CLEAR
         # -------------------------------------------------
-        if command == "cd" or command.startswith("cd "):
 
-            target = command[2:].strip()
-
-            if target == "" or target == "~":
-                new_dir = os.path.expanduser("~")
-
-            elif target.startswith("~/"):
-                new_dir = os.path.expanduser(target)
-
-            else:
-                if os.path.isabs(target):
-                    new_dir = target
-                else:
-                    new_dir = os.path.join(current_dir, target)
-
-            new_dir = os.path.abspath(new_dir)
-
-            if os.path.isdir(new_dir):
-                current_dir = new_dir
-
-                return {
-                    "command": command,
-                    "output": "",
-                    "error": "",
-                    "suggestion": None,
-                    "return_code": 0,
-                    "current_directory": current_dir
-                }
+        if command == "clear":
 
             return {
                 "command": command,
                 "output": "",
-                "error": f"cd: no such directory: {target}",
+                "error": "",
                 "suggestion": None,
-                "return_code": 1,
-                "current_directory": current_dir
+                "return_code": 0,
+                "current_directory": current_dir,
+                "clear": True
             }
 
-        # -------------------------------------------------
-        # CHECK FOR INTELLIGENT SUGGESTION
-        # -------------------------------------------------
-        suggestion = get_suggestion(command)
 
         # -------------------------------------------------
-        # EXECUTE COMMAND USING C SMART TERMINAL
+        # CD COMMAND
         # -------------------------------------------------
+
+        if command == "cd" or command.startswith("cd "):
+
+            target = command[2:].strip()
+
+
+            # cd
+            if target == "":
+                new_dir = os.path.expanduser("~")
+
+
+            # cd ~
+            elif target == "~":
+                new_dir = os.path.expanduser("~")
+
+
+            # cd ~/folder
+            elif target.startswith("~/"):
+                new_dir = os.path.expanduser(target)
+
+
+            # absolute path
+            elif os.path.isabs(target):
+                new_dir = target
+
+
+            # relative path
+            else:
+                new_dir = os.path.join(
+                    current_dir,
+                    target
+                )
+
+
+            new_dir = os.path.abspath(
+                new_dir
+            )
+
+
+            if os.path.isdir(new_dir):
+
+                current_dir = new_dir
+
+                return {
+                    "command": command,
+                    "output":
+                        f"Changed directory to {current_dir}",
+                    "error": "",
+                    "suggestion": None,
+                    "return_code": 0,
+                    "current_directory":
+                        current_dir
+                }
+
+
+            else:
+
+                return {
+                    "command": command,
+                    "output": "",
+                    "error":
+                        f"cd: no such directory: {target}",
+                    "suggestion": None,
+                    "return_code": 1,
+                    "current_directory":
+                        current_dir
+                }
+
+
+        # -------------------------------------------------
+        # CHECK FOR SUGGESTION
+        # -------------------------------------------------
+
+        suggestion = get_suggestion(command)
+
+
+        # IMPORTANT:
+        # If a suggestion exists, DO NOT execute
+        # the incomplete command.
+        #
+        # Example:
+        #
+        # git
+        #
+        # suggestion:
+        # git status
+        #
+        # The command "git" will NOT be executed.
+        # Only the suggestion will be shown.
+
+        if suggestion:
+
+            return {
+                "command": command,
+                "output": "",
+                "error": "",
+                "suggestion": suggestion,
+                "return_code": 0,
+                "current_directory":
+                    current_dir
+            }
+
+
+        # -------------------------------------------------
+        # EXECUTE COMMAND
+        # -------------------------------------------------
+
         result = subprocess.run(
-            [TERMINAL_PATH, "--backend", command],
+
+            [
+                TERMINAL_PATH,
+                "--backend",
+                command
+            ],
+
             capture_output=True,
+
             text=True,
+
             cwd=current_dir
         )
 
+
+        # -------------------------------------------------
+        # RETURN RESULT
+        # -------------------------------------------------
+
         return {
+
             "command": command,
-            "output": result.stdout,
-            "error": result.stderr,
-            "suggestion": suggestion,
-            "return_code": result.returncode,
-            "current_directory": current_dir
+
+            "output":
+                result.stdout,
+
+            "error":
+                result.stderr,
+
+            "suggestion":
+                None,
+
+            "return_code":
+                result.returncode,
+
+            "current_directory":
+                current_dir
         }
 
+
+    # =====================================================
+    # ERROR HANDLING
+    # =====================================================
+
     except Exception as e:
+
         return {
-            "command": request.command,
+
+            "command":
+                request.command,
+
             "output": "",
-            "error": str(e),
-            "suggestion": None,
-            "return_code": 1,
-            "current_directory": current_dir
+
+            "error":
+                str(e),
+
+            "suggestion":
+                None,
+
+            "return_code":
+                1,
+
+            "current_directory":
+                current_dir
         }

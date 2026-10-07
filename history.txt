@@ -63,3 +63,61 @@ pw
 p
 gcc
 git branch
+pwd
+ls
+ls -l
+date
+whoami
+uname -a
+echo Hello
+git status
+cat history.txt
+ls -la
+python3 --version
+gcc --version
+git --version
+find . -name "*.c"
+wc -l main.c
+head main.c
+wc -l history.txt
+sort -u history.txt | wc -l
+file main.c
+git diff --stat
+wc -l history.txt
+git status
+pwd
+pythn --version
+pw
+pwd
+gcc
+exit
+gcc --version
+pwd
+kk
+cd ..
+pwd
+clear
+ls -la
+echo "Intelligent Linux Terminal"
+date
+uname -a
+whoami
+pwd
+git st
+pw
+pwd
+gc
+gcc
+gcc --version
+git
+git status
+ls -la
+date
+ls -la
+whoami
+ls -la
+pwd
+ls -la
+pwd
+pwd
+pwd

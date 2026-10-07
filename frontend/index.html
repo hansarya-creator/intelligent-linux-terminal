@@ -1,65 +1,476 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
     <title>Intelligent Linux Terminal</title>
+
     <link rel="stylesheet" href="style.css">
+
 </head>
+
 
 <body>
 
-    <div class="terminal-container">
+<div class="app">
 
-        <div class="terminal-header">
-            <div class="terminal-title">
-                🐧 Intelligent Linux Terminal
+
+    <!-- =====================================================
+         HEADER
+    ====================================================== -->
+
+    <header class="header">
+
+        <div class="brand">
+
+            <div class="logo">
+                🐧
             </div>
 
-            <div class="status">
+            <div>
+
+                <h1>
+                    Intelligent <span>Linux Terminal</span>
+                </h1>
+
+                <p>
+                    Command Suggestions with History
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="header-right">
+
+            <div class="backend-status">
+
                 <span class="status-dot"></span>
+
                 Backend Connected
+
             </div>
+
+
+            <div class="header-buttons">
+
+                <button id="lightBtn">
+                    ☼
+                </button>
+
+                <button id="darkBtn">
+                    ☾
+                </button>
+
+                <button id="settingsBtn">
+                    ⚙
+                </button>
+
+            </div>
+
         </div>
 
-        <div class="terminal-body" id="terminalOutput">
-            <div class="welcome">
-                <h2>Intelligent Linux Terminal</h2>
-                <p>Web-based Linux command terminal</p>
-                <p>Type a command below to begin.</p>
+    </header>
+
+
+
+    <!-- =====================================================
+         MAIN
+    ====================================================== -->
+
+    <main class="main-content">
+
+
+        <!-- =================================================
+             TERMINAL
+        ================================================== -->
+
+        <section class="terminal-container">
+
+
+            <div class="terminal-titlebar">
+
+                <div class="window-buttons">
+
+                    <span class="red"></span>
+                    <span class="yellow"></span>
+                    <span class="green"></span>
+
+                </div>
+
+
+                <div class="terminal-title">
+
+                    <span>&gt;_</span>
+
+                    SmartTerminal
+
+                </div>
+
+
+                <div class="menu-dots">
+                    •••
+                </div>
+
             </div>
-        </div>
 
-        <div class="command-area">
 
-            <div class="prompt" id="prompt">
-                hansarya@SmartTerminal:~$
-            </div>
 
-            <input
-                type="text"
-                id="commandInput"
-                placeholder="Enter Linux command..."
-                autocomplete="off"
+            <!-- Terminal output -->
+
+            <div
+                class="terminal"
+                id="terminal"
             >
 
-            <button onclick="executeCommand()">
-                Execute
-            </button>
+                <div class="welcome">
 
-        </div>
+                    <div class="welcome-icon">
+                        &gt;_
+                    </div>
 
-        <div class="quick-commands">
-            <button onclick="quickCommand('pwd')">pwd</button>
-            <button onclick="quickCommand('ls')">ls</button>
-            <button onclick="quickCommand('date')">date</button>
-            <button onclick="quickCommand('history')">history</button>
-            <button onclick="quickCommand('clear')">clear</button>
-        </div>
 
-    </div>
+                    <div>
 
-    <script src="script.js"></script>
+                        <h2>
+                            Welcome to Intelligent Linux Terminal
+                        </h2>
+
+                        <p>
+                            Execute Linux commands directly from your browser.
+                        </p>
+
+                        <p>
+                            💡 Try typing a command below.
+                            Get smart suggestions based on your history.
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- Command input -->
+
+            <div class="command-area">
+
+                <div class="prompt">
+                    SmartTerminal&gt;
+                </div>
+
+
+                <input
+                    type="text"
+                    id="commandInput"
+                    placeholder="Enter Linux command..."
+                    autocomplete="off"
+                >
+
+
+                <button
+                    class="execute-btn"
+                    id="executeBtn"
+                >
+                    Execute
+                </button>
+
+            </div>
+
+
+        </section>
+
+
+
+        <!-- =================================================
+             RIGHT PANEL
+        ================================================== -->
+
+        <aside class="right-panel">
+
+
+            <!-- =================================================
+                 SYSTEM STATUS
+            ================================================== -->
+
+            <div class="side-card">
+
+                <h2>
+
+                    <span class="card-icon">
+                        ≋
+                    </span>
+
+                    System Status
+
+                </h2>
+
+
+                <div class="status-row">
+
+                    <span>
+                        ▣ Terminal
+                    </span>
+
+                    <strong class="online">
+                        ● Online
+                    </strong>
+
+                </div>
+
+
+                <div class="status-row">
+
+                    <span>
+                        ▱ Backend
+                    </span>
+
+                    <strong class="online">
+                        ● Connected
+                    </strong>
+
+                </div>
+
+
+                <div class="status-row">
+
+                    <span>
+                        ♟ Shell
+                    </span>
+
+                    <strong>
+                        Linux
+                    </strong>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 QUICK COMMANDS
+            ================================================== -->
+
+            <div class="side-card quick-card">
+
+                <h2>
+
+                    <span class="card-icon">
+                        ⚡
+                    </span>
+
+                    Quick Commands
+
+                </h2>
+
+
+                <div class="quick-grid">
+
+                    <button
+                        class="side-command"
+                        onclick="quickCommand('pwd')"
+                    >
+                        pwd
+                    </button>
+
+
+                    <button
+                        class="side-command"
+                        onclick="quickCommand('ls')"
+                    >
+                        ls
+                    </button>
+
+
+                    <button
+                        class="side-command"
+                        onclick="quickCommand('date')"
+                    >
+                        date
+                    </button>
+
+
+                    <button
+                        class="side-command"
+                        onclick="quickCommand('history')"
+                    >
+                        history
+                    </button>
+
+
+                    <button
+                        class="side-command"
+                        onclick="quickCommand('clear')"
+                    >
+                        clear
+                    </button>
+
+
+                    <button
+                        class="side-command"
+                        onclick="quickCommand('uname -a')"
+                    >
+                        uname -a
+                    </button>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- =================================================
+                 INTELLIGENT FEATURES
+            ================================================== -->
+
+            <div class="side-card">
+
+                <h2>
+
+                    <span class="card-icon">
+                        💡
+                    </span>
+
+                    Intelligent Features
+
+                </h2>
+
+
+                <!-- 2 x 2 GRID -->
+
+                <div class="feature-grid">
+
+
+                    <div class="feature">
+
+                        <span>✓</span>
+
+                        <span class="feature-text">
+                            Command History
+                        </span>
+
+                    </div>
+
+
+                    <div class="feature">
+
+                        <span>✓</span>
+
+                        <span class="feature-text">
+                            Smart Suggestions
+                        </span>
+
+                    </div>
+
+
+                    <div class="feature">
+
+                        <span>✓</span>
+
+                        <span class="feature-text">
+                            Prefix Matching
+                        </span>
+
+                    </div>
+
+
+                    <div class="feature">
+
+                        <span>✓</span>
+
+                        <span class="feature-text">
+                            Linux System Calls
+                        </span>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+        </aside>
+
+    </main>
+
+
+
+    <!-- =====================================================
+         FOOTER
+    ====================================================== -->
+
+    <footer>
+
+        Intelligent Linux Terminal
+
+        <span>•</span>
+
+        Command Suggestions with History
+
+        <span>•</span>
+
+        OSSP Project
+
+    </footer>
+
+
+</div>
+
+
+
+<script src="script.js"></script>
+
+
+<script>
+
+    /* LIGHT MODE */
+
+    document
+        .getElementById("lightBtn")
+        .addEventListener("click", function () {
+
+            document.body.classList.add("light-mode");
+
+        });
+
+
+    /* DARK MODE */
+
+    document
+        .getElementById("darkBtn")
+        .addEventListener("click", function () {
+
+            document.body.classList.remove("light-mode");
+
+        });
+
+
+    /* SETTINGS BUTTON */
+
+    document
+        .getElementById("settingsBtn")
+        .addEventListener("click", function () {
+
+            alert(
+                "Intelligent Linux Terminal\n\n" +
+                "Command Suggestions with History"
+            );
+
+        });
+
+</script>
+
 
 </body>
+
 </html>

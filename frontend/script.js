@@ -1,173 +1,354 @@
-const API_URL = "http://127.0.0.1:8000";
+const input = document.getElementById("commandInput");
+const terminal = document.getElementById("terminal");
+const executeBtn = document.getElementById("executeBtn");
 
-const commandInput = document.getElementById("commandInput");
-const terminalOutput = document.getElementById("terminalOutput");
-const prompt = document.getElementById("prompt");
+let currentSuggestion = "";
 
 
-// Execute command
-async function executeCommand() {
-    const command = commandInput.value.trim();
+/* =========================================================
+   EXECUTE COMMAND
+========================================================= */
+
+async function executeCommand(command) {
+
+    if (typeof command !== "string") {
+        command = input.value.trim();
+    }
+
+    command = command.trim();
 
     if (!command) {
         return;
     }
 
-    // Clear command box
-    commandInput.value = "";
-
-    // Display entered command
-    addCommand(command);
-
-    // Clear screen
-    if (command === "clear") {
-        terminalOutput.innerHTML = "";
-        return;
-    }
-
     try {
-        const response = await fetch(`${API_URL}/execute`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                command: command
-            })
-        });
+
+        const response = await fetch(
+            "http://127.0.0.1:8000/execute",
+            {
+                method: "POST",
+
+                headers: {
+                    "Content-Type": "application/json"
+                },
+
+                body: JSON.stringify({
+                    command: command
+                })
+            }
+        );
 
         const data = await response.json();
 
-        // Display command output
-        if (data.output) {
-            addOutput(data.output);
+
+        /* CLEAR */
+
+        if (command === "clear" || data.clear === true) {
+
+            terminal.innerHTML = "";
+
+            currentSuggestion = "";
+
+            input.value = "";
+
+            input.focus();
+
+            return;
         }
 
-        // Display error
-        if (data.error) {
-            addError(data.error);
-        }
 
-        // Display SmartTerminal suggestion
+        /* DISPLAY RESULT */
+
+        displayResult(data, command);
+
+
+        /* SUGGESTION */
+
         if (data.suggestion) {
-            addSuggestion(data.suggestion);
+
+            currentSuggestion = data.suggestion;
+
+            input.value = data.suggestion;
+
+        } else {
+
+            currentSuggestion = "";
+
+            input.value = "";
         }
 
-        // Update current directory
-        if (data.current_directory) {
-            updatePrompt(data.current_directory);
-        }
 
     } catch (error) {
-        addError(
-            "Unable to connect to backend.\n" +
-            "Make sure FastAPI server is running."
-        );
+
+        terminal.innerHTML += `
+            <div class="error">
+                Backend connection error.
+            </div>
+        `;
     }
 
-    // Scroll to bottom
-    terminalOutput.scrollTop = terminalOutput.scrollHeight;
+
+    terminal.scrollTop = terminal.scrollHeight;
+
+    input.focus();
 }
 
 
-// Add command to terminal
-function addCommand(command) {
-    const line = document.createElement("div");
+/* =========================================================
+   DISPLAY RESULT
+========================================================= */
 
-    line.className = "command-line";
+function displayResult(data, command) {
 
-    line.innerHTML = `
-        <span class="prompt-text">${getPromptText()}</span>
-        <span class="command-text">${escapeHTML(command)}</span>
+    const block = document.createElement("div");
+
+    block.className = "command-line";
+
+
+    let html = `
+
+        <div>
+
+            <span class="prompt">
+                SmartTerminal&gt;
+            </span>
+
+            <span class="command">
+                ${escapeHtml(command)}
+            </span>
+
+        </div>
+
     `;
 
-    terminalOutput.appendChild(line);
-}
 
+    if (data.suggestion) {
 
-// Add normal output
-function addOutput(output) {
-    const element = document.createElement("div");
+        html += `
 
-    element.className = "output";
-    element.textContent = output;
+            <div class="suggestion">
 
-    terminalOutput.appendChild(element);
-}
+                💡 Suggestion:
 
+                <span>
+                    ${escapeHtml(data.suggestion)}
+                </span>
 
-// Add error output
-function addError(error) {
-    const element = document.createElement("div");
+                <br>
 
-    element.className = "error";
-    element.textContent = error;
+                <small>
+                    Press ENTER to use this suggestion
+                </small>
 
-    terminalOutput.appendChild(element);
-}
+            </div>
 
-
-// Add SmartTerminal suggestion
-function addSuggestion(suggestion) {
-    const element = document.createElement("div");
-
-    element.className = "suggestion";
-
-    element.innerHTML = `
-        <strong>SmartTerminal Suggestion:</strong>
-        ${escapeHTML(suggestion)}
-    `;
-
-    terminalOutput.appendChild(element);
-}
-
-
-// Quick command buttons
-function quickCommand(command) {
-    commandInput.value = command;
-    commandInput.focus();
-
-    executeCommand();
-}
-
-
-// Update terminal prompt
-function updatePrompt(directory) {
-    let displayPath = directory;
-
-    const home = "/home/hansarya";
-
-    if (directory === home) {
-        displayPath = "~";
-    } else if (directory.startsWith(home + "/")) {
-        displayPath = "~" + directory.substring(home.length);
+        `;
     }
 
-    prompt.textContent = `hansarya@SmartTerminal:${displayPath}$`;
-}
 
+    if (data.output) {
 
-// Get current prompt
-function getPromptText() {
-    return prompt.textContent + " ";
-}
+        html += `
 
+            <div class="output">
 
-// Allow Enter key to execute
-commandInput.addEventListener("keydown", function(event) {
-    if (event.key === "Enter") {
-        executeCommand();
+                ${escapeHtml(data.output)}
+
+            </div>
+
+        `;
     }
-});
 
 
-// Prevent HTML injection
-function escapeHTML(text) {
+    if (data.error) {
+
+        html += `
+
+            <div class="error">
+
+                ${escapeHtml(data.error)}
+
+            </div>
+
+        `;
+    }
+
+
+    block.innerHTML = html;
+
+    terminal.appendChild(block);
+}
+
+
+/* =========================================================
+   ESCAPE HTML
+========================================================= */
+
+function escapeHtml(text) {
+
     const div = document.createElement("div");
+
     div.textContent = text;
+
     return div.innerHTML;
 }
 
 
-// Focus command box automatically
-commandInput.focus();
+/* =========================================================
+   EXECUTE BUTTON
+========================================================= */
+
+if (executeBtn) {
+
+    executeBtn.addEventListener(
+        "click",
+        function () {
+
+            executeCommand();
+
+        }
+    );
+}
+
+
+/* =========================================================
+   ENTER KEY
+========================================================= */
+
+if (input) {
+
+    input.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (event.key === "Enter") {
+
+                event.preventDefault();
+
+                if (currentSuggestion) {
+
+                    const suggestion =
+                        currentSuggestion;
+
+                    currentSuggestion = "";
+
+                    executeCommand(suggestion);
+
+                } else {
+
+                    executeCommand();
+
+                }
+            }
+        }
+    );
+}
+
+
+/* =========================================================
+   QUICK COMMANDS
+========================================================= */
+
+function quickCommand(command) {
+
+    input.value = command;
+
+    executeCommand(command);
+}
+
+
+/* =========================================================
+   THEME BUTTONS
+========================================================= */
+
+function enableLightMode() {
+
+    document.body.classList.add("light-mode");
+
+    localStorage.setItem(
+        "terminalTheme",
+        "light"
+    );
+}
+
+
+function enableDarkMode() {
+
+    document.body.classList.remove("light-mode");
+
+    localStorage.setItem(
+        "terminalTheme",
+        "dark"
+    );
+}
+
+
+/* =========================================================
+   SETTINGS
+========================================================= */
+
+function openSettings() {
+
+    alert(
+        "Intelligent Linux Terminal\n\n" +
+        "Backend: Connected\n" +
+        "Shell: Linux\n" +
+        "Command Suggestions: Enabled"
+    );
+}
+
+
+/* =========================================================
+   CONNECT HEADER BUTTONS
+========================================================= */
+
+const buttons =
+    document.querySelectorAll("button");
+
+buttons.forEach(function(button) {
+
+    const title =
+        button.getAttribute("title");
+
+    if (title === "Light Mode") {
+
+        button.addEventListener(
+            "click",
+            enableLightMode
+        );
+
+    }
+
+    if (title === "Dark Mode") {
+
+        button.addEventListener(
+            "click",
+            enableDarkMode
+        );
+
+    }
+
+    if (title === "Settings") {
+
+        button.addEventListener(
+            "click",
+            openSettings
+        );
+
+    }
+
+});
+
+
+/* =========================================================
+   LOAD SAVED THEME
+========================================================= */
+
+const savedTheme =
+    localStorage.getItem("terminalTheme");
+
+if (savedTheme === "light") {
+
+    enableLightMode();
+
+}
